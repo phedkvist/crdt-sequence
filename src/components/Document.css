@@ -1,0 +1,32 @@
+.editor {
+    max-width: 800px;
+}
+
+.ql-container {
+    min-height:300px;
+}
+
+.docForm {
+    font-size: 22px;
+    margin-top:50px;
+    border-radius: 5px;
+    border: 2px solid lightblue;
+    width: 200px;
+    height:400px;
+    margin:0 auto;
+    text-align: left;
+}
+
+.sequenceTable {
+    margin:20px auto;
+    border: 1px solid #add8e6;
+    border-radius: 5px;
+}
+
+.sequenceTable th {
+    background-color: lightcyan;
+}
+
+.sequenceTable tr {
+    border: 1px solid #add8e6;
+}
