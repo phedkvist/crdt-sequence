@@ -10,23 +10,26 @@ export class Sequence {
         this.chars = [];
         this.siteID = uuidv1();;
         this.count = 0;
-        this.insert(0, 0, '');
-        this.insert(100, 100, '');
+        this.insert(0, 0, "bof");
+        this.insert(100, 100, "eof");
     }
 
-    insert(indexStart: number, indexEnd: number, char: string) {
+    insert(indexStart: number, indexEnd: number, char: string, id?: string) : Char {
         let diff = (indexEnd - indexStart);
         let index = indexStart + diff/2;
-        let charObj = new Char(index, char, this.siteID);
+        let charObj = (id !== undefined) ? new Char(index, char, this.siteID, id) : new Char(index, char, this.siteID);
+
         this.chars.splice(index, 0, charObj);
         this.chars.sort(function(a,b) {
             return a.index - b.index;
         })
-        console.log(this.chars);
+        return charObj;
     }
 
     remoteInsert(char: Char) {
-        this.chars.push(char);
+        //console.log("Remote insert:", char);
+        const charCopy = new Char(char.index, char.char, char.siteID, char.id);
+        this.chars.push(charCopy);
         this.chars.sort(function(a,b) {
             if(a.index == b.index) {
                 return a.siteID - b.siteID;
@@ -37,37 +40,71 @@ export class Sequence {
         })
     }
 
-    delete(index: number) {
-        let char = this.chars.find(e => e.index == index);
+    delete(id: string) {
+        //console.log(id);
+        let char = this.chars.find(e => e.id === id);
         if (char !== undefined) {
             char.tombstone = true;
-            console.log("removed: ", char)
+            //console.log("removed: ", char)
         } else {
-            console.log("did not found char")
+            //console.log("did not found char")
         }
     }
 
-    getRelativeIndex(index: number): Array<number> {
+    getRelativeIndex(index: number): Array<Char> {
+        //console.log("gri", index);
         let i = 0;
+        let aliveIndex = 0;
         let itemsFound = false;
         let charStart; let charEnd; let char;
         while(!itemsFound && (i < this.chars.length)) {
             char = this.chars[i];
+            //console.log(char);
             if(!char.tombstone) {
-                if(i>index) {
+                //console.log(char, aliveIndex)
+                if(aliveIndex>index) {
                     charEnd = char;
                     itemsFound = true;
                 } else {
                     charStart = char;
                 }
+                aliveIndex++;
             }
-            if (!itemsFound) {
-                i++;
-            }
-            //console.log(char, charStart, charEnd);
+            //console.log(index, aliveIndex, charStart, charEnd);
+            i++;
+        }
+        if(aliveIndex>=index) {
+            charEnd = char;
+            itemsFound = true;
+        } else {
+            charStart = char;
         }
         if (charStart && charEnd)
-            return [charStart.index, charEnd.index];
+            return [charStart, charEnd ];
+        else
+            throw Error("failedToFindRelativeIndex");
+    }
+
+    getCharRelativeIndex(char: Char) : number {
+        let i = 0;
+        let aliveIndex = 0;
+        let charFound = false;
+        while(!charFound && (i < this.chars.length)) {
+            let c = this.chars[i];
+            if(!c.tombstone && c.char !== "bof" && c.char !== "eof")
+                aliveIndex++;
+            if (c.id === char.id) {
+                if (c.tombstone) {
+                    aliveIndex++;
+                }
+                charFound = true;
+            }
+            console.log(c, i, aliveIndex);
+            i++;
+
+        }
+        if (charFound)
+            return aliveIndex;
         else
             throw Error("failedToFindRelativeIndex");
     }

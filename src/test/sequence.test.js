@@ -1,8 +1,6 @@
 import { Sequence } from '../crdt/Sequence';
 import { Char } from '../crdt/Char';
 
-import { AssertionError } from 'assert';
-
 describe('Sequence', () => {
   let sequence;
   beforeEach(() => {
