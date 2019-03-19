@@ -1,16 +1,16 @@
 import { UserVersion } from './UserVersion';
 import { Socket } from './Socket';
-import { Sequence } from 'src/crdt/Sequence';
-import { Char } from 'src/crdt/Char';
+import { Sequence } from '../../src/crdt/Sequence';
+import { Char } from '../../src/crdt/Char';
 
 export class History {
     sequence: Sequence;
     versionVector: Array<UserVersion>;
     currentUserID: number;
     socket: Socket;
-    remoteInsert: (index: number, char: string) => void;
+    remoteInsert: (index: number, char: Char) => void;
     remoteDelete: (index: number) => void;
-    constructor(currentUserID: string, remoteInsert: (index: number, char: string) => void, 
+    constructor(currentUserID: string, remoteInsert: (index: number, char: Char) => void, 
         remoteDelete: (index: number) => void) {
 
         this.socket = new Socket(this.remoteChange.bind(this), this.updateConnectionState.bind(this))
@@ -24,10 +24,10 @@ export class History {
 
     }
 
-    insert(indexStart: number, indexEnd: number, char: string, source: string) {
+    insert(indexStart: number, indexEnd: number, char: string, attributes: object, source: string) {
         //console.log("insert: ", char, ", at: ", indexStart, ", source: ", source);
         if (source !== 'silent') {
-            let charObj: Char = this.sequence.insert(indexStart, indexEnd, char);
+            let charObj: Char = this.sequence.insert(indexStart, indexEnd, char, attributes);
             //console.log('insert');
             this.socket.send(JSON.stringify({type: 'insert', data: charObj}));
         }
@@ -39,6 +39,10 @@ export class History {
             //console.log('delete sent now!');
             this.socket.send(JSON.stringify({type: 'delete', data: char}));
         }
+    }
+
+    retain(char: Char, source: string) {
+
     }
 
     getRelativeIndex(index: number): Array<Char> {
@@ -53,7 +57,7 @@ export class History {
             this.sequence.remoteInsert(char);
             let index = this.sequence.getCharRelativeIndex(char);
             console.log("remote ins", 'index: ',index, ', char: ', char);
-            this.remoteInsert(index, char.char);
+            this.remoteInsert(index, char);
         } else if (change.type === 'delete') {
             let id : string = char.id;
             //console.log('delete', id);

@@ -10,14 +10,14 @@ export class Sequence {
         this.chars = [];
         this.siteID = uuidv1();;
         this.count = 0;
-        this.insert(0, 0, "bof");
-        this.insert(100, 100, "eof");
+        this.insert(0, 0, "bof", {});
+        this.insert(10000, 10000, "eof", {});
     }
 
-    insert(indexStart: number, indexEnd: number, char: string, id?: string) : Char {
+    insert(indexStart: number, indexEnd: number, char: string, attributes: object, id?: string) : Char {
         let diff = (indexEnd - indexStart);
-        let index = indexStart + diff/2;
-        let charObj = (id !== undefined) ? new Char(index, char, this.siteID, id) : new Char(index, char, this.siteID);
+        let index = Math.round(indexStart + diff/1000);
+        let charObj = (id !== undefined) ? new Char(index, char, this.siteID, attributes, id) : new Char(index, char, this.siteID, attributes);
 
         this.chars.splice(index, 0, charObj);
         this.chars.sort(function(a,b) {
@@ -28,7 +28,7 @@ export class Sequence {
 
     remoteInsert(char: Char) {
         //console.log("Remote insert:", char);
-        const charCopy = new Char(char.index, char.char, char.siteID, char.id);
+        const charCopy = new Char(char.index, char.char, char.siteID, {bold: char.bold, italic: char.italic, underline: char.underline}, char.id);
         this.chars.push(charCopy);
         this.chars.sort(function(a,b) {
             if(a.index == b.index) {
@@ -89,8 +89,9 @@ export class Sequence {
         let i = 0;
         let aliveIndex = 0;
         let charFound = false;
+        let c;
         while(!charFound && (i < this.chars.length)) {
-            let c = this.chars[i];
+            c = this.chars[i];
             if(!c.tombstone && c.char !== "bof" && c.char !== "eof")
                 aliveIndex++;
             if (c.id === char.id) {
@@ -99,12 +100,12 @@ export class Sequence {
                 }
                 charFound = true;
             }
-            console.log(c, i, aliveIndex);
             i++;
 
         }
+        console.log(c, i, aliveIndex);
         if (charFound)
-            return aliveIndex;
+            return aliveIndex-1;
         else
             throw Error("failedToFindRelativeIndex");
     }

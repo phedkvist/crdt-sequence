@@ -1,9 +1,9 @@
 import * as React from 'react';
 import './Document.css';
 import 'react-quill/dist/quill.snow.css'; // ES6
-
 import  ReactQuill from 'react-quill'; // Typescript
 import { History } from '../service/History';
+import { Char } from '../crdt/Char';
 const uuidv1 = require('uuid/v1');
 
 
@@ -39,11 +39,13 @@ class Document extends React.Component<Props, State> {
     }
   }
 
-  remoteInsert(index: number, char: string) {
+  remoteInsert(index: number, char: Char) {
     if (this.reactQuillRef.current) {
-      //console.log("remote insert: ", index+1);
-      this.reactQuillRef.current.getEditor().insertText(index, char, "silent");
-      //this.reactQuillRef.current.getEditor().update("api");
+      this.reactQuillRef.current.getEditor().insertText(index, char.char, {
+        'italic': char.italic,
+        'bold': char.bold,
+        'underline': char.underline,
+      }, "silent");
     }
     this.forceUpdate();
   }
@@ -55,18 +57,16 @@ class Document extends React.Component<Props, State> {
     }
   }
 
-  singleInsert(char: string, index: number, source: string) {
+  singleInsert(char: string, index: number, attributes: object, source: string) {
     let crdtIndex = this.state.history.getRelativeIndex(index);
-    //console.log("insert index: ", crdtIndex[0].index, crdtIndex[1].index);
-    this.state.history.insert(crdtIndex[0].index, crdtIndex[1].index, char, source);
-    //console.log(crdtIndex, char);
+    this.state.history.insert(crdtIndex[0].index, crdtIndex[1].index, char, attributes, source);
   }
 
-  multiInsert(chars: String, startIndex: number, source: string) {
+  multiInsert(chars: String, startIndex: number, attributes: object, source: string) {
     let index = startIndex;
     for (let i in chars) {
       let char = chars[i];
-      this.singleInsert(char, index, source);
+      this.singleInsert(char, index, attributes, source);
       index += 1;
     }
   }
@@ -91,15 +91,30 @@ class Document extends React.Component<Props, State> {
     }
   }
 
+  singleRetain(index: number, attribute: object, source: string) {
+    try {
+      let chars = this.state.history.getRelativeIndex(index);
+      //console.log(index, crdtIndex);
+      this.state.history.retain(chars[1], source);
+    } catch {
+      alert("failed to find relative index");
+    }
+  }
+
+  multiRetain(index: number, len: number, attribute: object, source: string) {
+
+  }
+
   inspectDelta(ops: any, index: number, source: string) {
-    //console.log(ops, index)
+    console.log(ops, index)
     if (ops["insert"] != null) {
       let chars = ops["insert"];
-      //console.log(chars);
+      let attributes = ops["attributes"];
+      console.log(attributes);
       if (chars.length > 1) {
-        this.multiInsert(chars, index, source);
+        this.multiInsert(chars, index, attributes, source);
       } else {
-        this.singleInsert(chars, index, source);
+        this.singleInsert(chars, index, attributes, source);
       }
     } else if (ops["delete"] != null) {
       let chars = ops["delete"];
@@ -108,6 +123,14 @@ class Document extends React.Component<Props, State> {
         this.multiDelete(index, chars, source);
       } else {
         this.singleDelete(index, source);
+      }
+    } else if (ops["retain"] != null) {
+      let len = ops["retain"];
+      let attribute = ops["attribute"];
+      if (len > 1) {
+        this.multiRetain(index, len, attribute, source);
+      } else {
+        this.singleRetain(index, attribute, source);
       }
     }
   }
@@ -137,9 +160,8 @@ class Document extends React.Component<Props, State> {
         <tr key={char.id}>
           <td>{char.char}</td>
           <td>{char.index}</td>
-          <td>{char.id}</td>
-          <td>{char.siteID}</td>
           <td>{char.tombstone.toString()}</td>
+          <td>b: {char.bold.toString()}, u: {char.underline.toString()}, i: {char.italic.toString()}</td>
         </tr>
       );
     });
@@ -155,9 +177,8 @@ class Document extends React.Component<Props, State> {
             <tr>
               <th>#</th>
               <th>Index</th>
-              <th>ID</th>
-              <th>Site ID</th>
               <th>Tombstone</th>
+              <th>Attributes</th>
             </tr>
           </thead>
           <tbody>
