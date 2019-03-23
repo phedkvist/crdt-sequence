@@ -10,14 +10,16 @@ export class History {
     socket: Socket;
     remoteInsert: (index: number, char: Char) => void;
     remoteDelete: (index: number) => void;
+    remoteRetain: (index: number, char: Char) => void;
     constructor(currentUserID: string, remoteInsert: (index: number, char: Char) => void, 
-        remoteDelete: (index: number) => void) {
+        remoteDelete: (index: number) => void, remoteRetain: (index: number, char: Char) => void) {
 
         this.socket = new Socket(this.remoteChange.bind(this), this.updateConnectionState.bind(this))
         this.sequence = new Sequence();
         this.versionVector = [];
         this.remoteInsert = remoteInsert;
         this.remoteDelete = remoteDelete;
+        this.remoteRetain = remoteRetain;
     }
 
     updateConnectionState() {
@@ -41,8 +43,12 @@ export class History {
         }
     }
 
-    retain(char: Char, source: string) {
-
+    retain(char: Char, attributes: object, source: string) {
+        if (source !== 'silent') {
+            char.update(attributes);
+            this.socket.send(JSON.stringify({type: 'retain', data: char}));
+            console.log("sent remote retain");
+        }
     }
 
     getRelativeIndex(index: number): Array<Char> {
@@ -66,6 +72,16 @@ export class History {
                 let index = this.sequence.getCharRelativeIndex(char);
                 console.log("remote del", 'index: ',index, ', char: ', char);
                 this.remoteDelete(index);
+            } catch (e) {
+                console.log(e);
+            }
+        } else if (change.type === 'retain') {
+            console.log("recieved remote retain");
+            this.sequence.remoteRetain(char);
+            try {
+                let index = this.sequence.getCharRelativeIndex(char);
+                console.log("remote retain", 'index: ',index, ', char: ', char);
+                this.remoteRetain(index, char);
             } catch (e) {
                 console.log(e);
             }

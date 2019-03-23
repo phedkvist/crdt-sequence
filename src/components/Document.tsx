@@ -1,11 +1,18 @@
 import * as React from 'react';
 import './Document.css';
-import 'react-quill/dist/quill.snow.css'; // ES6
-import  ReactQuill from 'react-quill'; // Typescript
+import 'react-quill/dist/quill.snow.css';
+// @ts-ignore
+import ReactQuill, { Quill } from 'react-quill'; 
+// @ts-ignore
+import QuillCursors from 'quill-cursors';
 import { History } from '../service/History';
 import { Char } from '../crdt/Char';
 const uuidv1 = require('uuid/v1');
 
+Quill.register('modules/cursors', QuillCursors)
+const modules = {
+  cursors: true,
+};
 
 export interface Props {
 }
@@ -23,10 +30,12 @@ class Document extends React.Component<Props, State> {
     this.state = {
       text: "",
       doc: "",
-      history: new History(uuidv1(), this.remoteInsert.bind(this), this.remoteDelete.bind(this)),
+      history: new History(uuidv1(), this.remoteInsert.bind(this), this.remoteDelete.bind(this),
+        this.remoteRetain.bind(this)),
     }
     
     this.handleChange = this.handleChange.bind(this);
+    this.handleChangeSelection = this.handleChangeSelection.bind(this);
     this.onFocus = this.onFocus.bind(this);
     this.onBlur = this.onBlur.bind(this);
   }
@@ -35,7 +44,9 @@ class Document extends React.Component<Props, State> {
   componentDidMount() {
     if (this.reactQuillRef.current) {
       this.reactQuillRef.current.getEditor().enable;
-      console.log("enabled");
+      //console.log(this.reactQuillRef.current);
+      //this.reactQuillRef.current.editor.register('modules/cursors', QuillCursors);
+      //this.reactQuillRef.current.Quill.register('modules/cursors', QuillCursors);
     }
   }
 
@@ -55,6 +66,20 @@ class Document extends React.Component<Props, State> {
       //console.log("remote delete: ", index);
       this.reactQuillRef.current.getEditor().deleteText(index, 1, "silent");
     }
+  }
+
+  remoteRetain(index: number, char: Char) {
+    if (this.reactQuillRef.current) {
+      console.log('remote retain', char);
+      this.reactQuillRef.current.getEditor().formatText(index,1,
+        {
+          'italic': char.italic,
+          'bold': char.bold,
+          'underline': char.underline,
+          'link': char.link,
+        }, 'silent'
+      );
+    } 
   }
 
   singleInsert(char: string, index: number, attributes: object, source: string) {
@@ -93,24 +118,28 @@ class Document extends React.Component<Props, State> {
 
   singleRetain(index: number, attribute: object, source: string) {
     try {
+      console.log("single retain", index, attribute);
       let chars = this.state.history.getRelativeIndex(index);
-      //console.log(index, crdtIndex);
-      this.state.history.retain(chars[1], source);
+      console.log(index, chars[1]);
+      this.state.history.retain(chars[1], attribute, source);
     } catch {
       alert("failed to find relative index");
     }
   }
 
-  multiRetain(index: number, len: number, attribute: object, source: string) {
-
+  multiRetain(index: number, length: number, attribute: object, source: string) {
+    console.log("multi retain", index, attribute);
+    for (let i = 0; i < length; i++) {
+      //console.log(i, index)
+      this.singleRetain(index, attribute, source);
+      index += 1;
+    }
   }
 
   inspectDelta(ops: any, index: number, source: string) {
-    console.log(ops, index)
     if (ops["insert"] != null) {
       let chars = ops["insert"];
       let attributes = ops["attributes"];
-      console.log(attributes);
       if (chars.length > 1) {
         this.multiInsert(chars, index, attributes, source);
       } else {
@@ -126,11 +155,11 @@ class Document extends React.Component<Props, State> {
       }
     } else if (ops["retain"] != null) {
       let len = ops["retain"];
-      let attribute = ops["attribute"];
+      let attributes = ops["attributes"];
       if (len > 1) {
-        this.multiRetain(index, len, attribute, source);
+        this.multiRetain(index, len, attributes, source);
       } else {
-        this.singleRetain(index, attribute, source);
+        this.singleRetain(index, attributes, source);
       }
     }
   }
@@ -146,12 +175,27 @@ class Document extends React.Component<Props, State> {
     this.setState({ text: value }) 
   }
 
+  handleChangeSelection(range, source, editor) {
+    console.log("onChangeSelection", range, source, editor);
+  }
+
   onFocus(range, source, editor) {
-    //console.log("onFocus: ", range)
+    console.log("onFocus: ", range)
   }
   
   onBlur(previousRange, source, editor) {
-    //console.log("onBlur: ", previousRange)
+    console.log("onBlur: ", previousRange)
+  }
+
+  testCursor() {
+    if (this.reactQuillRef.current) {
+      const cursorOne = this.reactQuillRef.current.getEditor().getModule('cursors');
+      console.log(cursorOne);
+      
+      cursorOne.createCursor(1, 'Test', 'blue');
+      cursorOne.moveCursor(1, { index: 1, length: 3 })
+      
+    }
   }
 
   render() {
@@ -161,7 +205,14 @@ class Document extends React.Component<Props, State> {
           <td>{char.char}</td>
           <td>{char.index}</td>
           <td>{char.tombstone.toString()}</td>
-          <td>b: {char.bold.toString()}, u: {char.underline.toString()}, i: {char.italic.toString()}</td>
+          <td>
+            b: {char.bold !== null ? char.bold.toString() : ''},
+            u: {char.underline !== null ? char.underline.toString() : ''}, 
+            i: {char.italic !== null ? char.italic.toString() : ''}
+          </td>
+          <td>
+            {char.link}
+          </td>
         </tr>
       );
     });
@@ -169,9 +220,10 @@ class Document extends React.Component<Props, State> {
     return (
       <div className="editor">
         <h3>CRDT Sequence</h3>
-        <ReactQuill value={this.state.text} theme={"snow"} ref={this.reactQuillRef}
-                  onChange={this.handleChange} onFocus={this.onFocus} onBlur={this.onBlur} />
-        
+        <ReactQuill value={this.state.text} theme={"snow"} ref={this.reactQuillRef} 
+                  onChange={this.handleChange} onFocus={this.onFocus} onBlur={this.onBlur}
+                  onChangeSelection={this.handleChangeSelection} modules={modules}/>
+        <button onClick={this.testCursor.bind(this)}>Cursor</button>
         <table className="sequenceTable">
           <thead>
             <tr>
@@ -179,6 +231,7 @@ class Document extends React.Component<Props, State> {
               <th>Index</th>
               <th>Tombstone</th>
               <th>Attributes</th>
+              <th>link</th>
             </tr>
           </thead>
           <tbody>

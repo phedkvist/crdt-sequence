@@ -51,6 +51,16 @@ export class Sequence {
         }
     }
 
+    remoteRetain(charCopy: Char) {
+        let char = this.chars.find(c => c.id === charCopy.id);
+        if (char !== undefined) {
+            char.update({
+                bold: charCopy.bold, italic: charCopy.italic, 
+                underline: charCopy.underline, link: charCopy.link
+            });
+        }
+    }
+
     getRelativeIndex(index: number): Array<Char> {
         //console.log("gri", index);
         let i = 0;
@@ -101,7 +111,6 @@ export class Sequence {
                 charFound = true;
             }
             i++;
-
         }
         console.log(c, i, aliveIndex);
         if (charFound)
