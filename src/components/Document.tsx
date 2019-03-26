@@ -1,12 +1,13 @@
-import * as React from 'react';
-import './Document.css';
-import 'react-quill/dist/quill.snow.css';
-// @ts-ignore
-import ReactQuill, { Quill } from 'react-quill'; 
 // @ts-ignore
 import QuillCursors from 'quill-cursors';
-import { History } from '../service/History';
+import * as React from 'react';
+// @ts-ignore
+import ReactQuill, { Quill, Range } from 'react-quill'; 
+import 'react-quill/dist/quill.snow.css';
 import { Char } from '../crdt/Char';
+import { History } from '../service/History';
+import './Document.css';
+// tslint:disable-next-line: no-var-requires
 const uuidv1 = require('uuid/v1');
 
 Quill.register('modules/cursors', QuillCursors)
@@ -14,24 +15,27 @@ const modules = {
   cursors: true,
 };
 
-export interface Props {
+// tslint:disable-next-line: no-empty-interface
+export interface IProps {
 }
 
-interface State {
+interface IState {
   text: string,
   doc: any,
   history: History,
 }
 
-class Document extends React.Component<Props, State> {
-  constructor(props: Props) {
+class Document extends React.Component<IProps, IState> {
+  private reactQuillRef = React.createRef<ReactQuill>();
+
+  constructor(props: IProps) {
     super(props)
 
     this.state = {
-      text: "",
       doc: "",
       history: new History(uuidv1(), this.remoteInsert.bind(this), this.remoteDelete.bind(this),
         this.remoteRetain.bind(this)),
+      text: "",
     }
     
     this.handleChange = this.handleChange.bind(this);
@@ -39,7 +43,6 @@ class Document extends React.Component<Props, State> {
     this.onFocus = this.onFocus.bind(this);
     this.onBlur = this.onBlur.bind(this);
   }
-  private reactQuillRef = React.createRef<ReactQuill>();
 
   componentDidMount() {
     if (this.reactQuillRef.current) {
@@ -164,7 +167,7 @@ class Document extends React.Component<Props, State> {
     }
   }
 
-  handleChange(value, delta, source) {
+  private handleChange(value: any, delta: any, source: any) {
     //console.log('!== api')
     let index = delta.ops[0]["retain"] || 0;
     if (delta.ops.length > 1) {
@@ -175,19 +178,19 @@ class Document extends React.Component<Props, State> {
     this.setState({ text: value }) 
   }
 
-  handleChangeSelection(range, source, editor) {
+  private handleChangeSelection(range: any, source: string, editor: any) {
     console.log("onChangeSelection", range, source, editor);
   }
 
-  onFocus(range, source, editor) {
+  private onFocus(range: Range, source: string, editor: any) {
     console.log("onFocus: ", range)
   }
   
-  onBlur(previousRange, source, editor) {
+  private onBlur(previousRange: Range, source: string, editor: any) {
     console.log("onBlur: ", previousRange)
   }
 
-  testCursor() {
+  private testCursor() {
     if (this.reactQuillRef.current) {
       const cursorOne = this.reactQuillRef.current.getEditor().getModule('cursors');
       console.log(cursorOne);
@@ -198,7 +201,7 @@ class Document extends React.Component<Props, State> {
     }
   }
 
-  render() {
+  public render() {
     let table_content = this.state.history.sequence.chars.map(char => {
       return (
         <tr key={char.id}>

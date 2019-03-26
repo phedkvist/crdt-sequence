@@ -58,13 +58,14 @@ export class History {
     remoteChange(jsonMessage: any) {
         //TODO: Validate data in jsonMessage
         let change = JSON.parse(jsonMessage);
-        let char : Char = change.data;
         if (change.type === 'insert') {
+            let char : Char = change.data;
             this.sequence.remoteInsert(char);
             let index = this.sequence.getCharRelativeIndex(char);
             console.log("remote ins", 'index: ',index, ', char: ', char);
             this.remoteInsert(index, char);
         } else if (change.type === 'delete') {
+            let char : Char = change.data;
             let id : string = char.id;
             //console.log('delete', id);
             this.sequence.delete(id);
@@ -76,6 +77,7 @@ export class History {
                 console.log(e);
             }
         } else if (change.type === 'retain') {
+            let char : Char = change.data;
             console.log("recieved remote retain");
             this.sequence.remoteRetain(char);
             try {
@@ -85,6 +87,10 @@ export class History {
             } catch (e) {
                 console.log(e);
             }
+        } else if (change.type === 'cursor') {
+            let startID = change.startID;
+            let endID = change.endID;
+            console.log(startID, endID);
         }
     }
 }
