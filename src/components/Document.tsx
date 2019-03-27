@@ -48,9 +48,6 @@ class Document extends React.Component<IProps, IState> {
   componentDidMount() {
     if (this.reactQuillRef.current) {
       this.reactQuillRef.current.getEditor().enable;
-      //console.log(this.reactQuillRef.current);
-      //this.reactQuillRef.current.editor.register('modules/cursors', QuillCursors);
-      //this.reactQuillRef.current.Quill.register('modules/cursors', QuillCursors);
     }
   }
 
@@ -113,56 +110,40 @@ class Document extends React.Component<IProps, IState> {
     }
   }
 
-  private singleInsert(char: string, index: number, attributes: object, source: string) {
-    let crdtIndex = this.state.history.getRelativeIndex(index);
-    this.state.history.insert(crdtIndex[0].index, crdtIndex[1].index, char, attributes, source);
-  }
-
-  private multiInsert(chars: String, startIndex: number, attributes: object, source: string) {
+  private insert(chars: String, startIndex: number, attributes: object, source: string) {
     let index = startIndex;
     for (let i in chars) {
       let char = chars[i];
-      this.singleInsert(char, index, attributes, source);
+      let crdtIndex = this.state.history.getRelativeIndex(index);
+      this.state.history.insert(crdtIndex[0].index, crdtIndex[1].index, char, attributes, source);
       index += 1;
     }
   }
 
-  private singleDelete(index: number, source: string) {
-    try {
-      let chars = this.state.history.getRelativeIndex(index);
-      //console.log(index, crdtIndex);
-      this.state.history.delete(chars[1], source);
-    } catch {
-      alert("failed to find relative index");
-    }
-  }
-
-  private multiDelete(startIndex: number, length: number, source: string) {
+  private delete(startIndex: number, length: number, source: string) {
     let index = startIndex;
-    //console.log(length)
     for (let i = 0; i < length; i++) {
-      //console.log(i, index)
-      this.singleDelete(index, source);
-      //index += 1;
+      try {
+        let chars = this.state.history.getRelativeIndex(index);
+        this.state.history.delete(chars[1], source);
+      } catch {
+        alert("failed to find relative index");
+      }
     }
   }
 
-  private singleRetain(index: number, attribute: object, source: string) {
-    try {
-      console.log("single retain", index, attribute);
-      let chars = this.state.history.getRelativeIndex(index);
-      console.log(index, chars[1]);
-      this.state.history.retain(chars[1], attribute, source);
-    } catch {
-      alert("failed to find relative index");
-    }
-  }
-
-  private multiRetain(index: number, length: number, attribute: object, source: string) {
+  private retain(index: number, length: number, attribute: object, source: string) {
     console.log("multi retain", index, attribute);
     for (let i = 0; i < length; i++) {
       //console.log(i, index)
-      this.singleRetain(index, attribute, source);
+      try {
+        console.log("single retain", index, attribute);
+        let chars = this.state.history.getRelativeIndex(index);
+        console.log(index, chars[1]);
+        this.state.history.retain(chars[1], attribute, source);
+      } catch {
+        alert("failed to find relative index");
+      }
       index += 1;
     }
   }
@@ -171,27 +152,14 @@ class Document extends React.Component<IProps, IState> {
     if (ops["insert"] != null) {
       let chars = ops["insert"];
       let attributes = ops["attributes"];
-      if (chars.length > 1) {
-        this.multiInsert(chars, index, attributes, source);
-      } else {
-        this.singleInsert(chars, index, attributes, source);
-      }
+      this.insert(chars, index, attributes, source);
     } else if (ops["delete"] != null) {
-      let chars = ops["delete"];
-      //console.log(index, ops, chars);
-      if (chars > 1) {
-        this.multiDelete(index, chars, source);
-      } else {
-        this.singleDelete(index, source);
-      }
+      let len = ops["delete"];
+      this.delete(index, len, source);
     } else if (ops["retain"] != null) {
       let len = ops["retain"];
       let attributes = ops["attributes"];
-      if (len > 1) {
-        this.multiRetain(index, len, attributes, source);
-      } else {
-        this.singleRetain(index, attributes, source);
-      }
+      this.retain(index, len, attributes, source);
     }
   }
 
