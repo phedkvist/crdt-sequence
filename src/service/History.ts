@@ -2,10 +2,12 @@ import { UserVersion } from './UserVersion';
 import { Socket } from './Socket';
 import { Sequence } from '../../src/crdt/Sequence';
 import { Char } from '../../src/crdt/Char';
+import { Cursor } from './Cursor';
 
 export class History {
     sequence: Sequence;
     versionVector: Array<UserVersion>;
+    cursors: Array<Cursor>;
     currentUserID: number;
     socket: Socket;
     remoteInsert: (index: number, char: Char) => void;
@@ -55,6 +57,17 @@ export class History {
         return this.sequence.getRelativeIndex(index);
     }
 
+    updateCursor(userID: string, startChar: Char, endChar: Char) {
+        const relStartIndex = this.sequence.getCharRelativeIndex(startChar);
+        const relEndIndex = this.sequence.getCharRelativeIndex(endChar);
+        const len = relEndIndex - relStartIndex;
+        console.log(len);
+    }
+
+    getCursors() : Array<Cursor> {
+        return this.cursors;
+    }
+
     remoteChange(jsonMessage: any) {
         //TODO: Validate data in jsonMessage
         let change = JSON.parse(jsonMessage);
@@ -88,9 +101,10 @@ export class History {
                 console.log(e);
             }
         } else if (change.type === 'cursor') {
-            let startID = change.startID;
-            let endID = change.endID;
-            console.log(startID, endID);
+            let userID = change.userID;
+            let startChar = change.startChar;
+            let endChar = change.endChar;
+            this.updateCursor(userID, startChar, endChar);
         }
     }
 }

@@ -7,6 +7,7 @@ import 'react-quill/dist/quill.snow.css';
 import { Char } from '../crdt/Char';
 import { History } from '../service/History';
 import './Document.css';
+import { Cursor } from 'src/service/Cursor';
 // tslint:disable-next-line: no-var-requires
 const uuidv1 = require('uuid/v1');
 
@@ -53,7 +54,7 @@ class Document extends React.Component<IProps, IState> {
     }
   }
 
-  remoteInsert(index: number, char: Char) {
+  public remoteInsert(index: number, char: Char) {
     if (this.reactQuillRef.current) {
       this.reactQuillRef.current.getEditor().insertText(index, char.char, {
         'italic': char.italic,
@@ -64,14 +65,14 @@ class Document extends React.Component<IProps, IState> {
     this.forceUpdate();
   }
 
-  remoteDelete(index: number) {
+  public remoteDelete(index: number) {
     if (this.reactQuillRef.current) {
       //console.log("remote delete: ", index);
       this.reactQuillRef.current.getEditor().deleteText(index, 1, "silent");
     }
   }
 
-  remoteRetain(index: number, char: Char) {
+  public remoteRetain(index: number, char: Char) {
     if (this.reactQuillRef.current) {
       console.log('remote retain', char);
       this.reactQuillRef.current.getEditor().formatText(index,1,
@@ -85,12 +86,39 @@ class Document extends React.Component<IProps, IState> {
     } 
   }
 
-  singleInsert(char: string, index: number, attributes: object, source: string) {
+  public updateRemoteCursors() {
+    if (this.reactQuillRef.current) {
+      const quillCursors = this.reactQuillRef.current.getEditor().getModule('cursors');
+      const cursors : Array<Cursor> = this.state.history.getCursors();
+      for (let i in cursors) {
+        const cursor : Cursor = cursors[i];
+        const qC = quillCursors.cursors.find((c: { id: string; }) => c.id === cursor.userID);
+        if (qC) {
+          quillCursors.moveCursor(qC.id, {index: cursor.start, length: cursor.length})
+        } else {
+          quillCursors.createCursor(cursor.userID, 'Bob', cursor.color);
+        }
+      }
+    }
+  }
+
+  private testCursor() {
+    if (this.reactQuillRef.current) {
+      const cursorOne = this.reactQuillRef.current.getEditor().getModule('cursors');
+      console.log(cursorOne);
+      
+      cursorOne.createCursor(1, 'Test', 'blue');
+      cursorOne.moveCursor(1, { index: 1, length: 3 })
+      
+    }
+  }
+
+  private singleInsert(char: string, index: number, attributes: object, source: string) {
     let crdtIndex = this.state.history.getRelativeIndex(index);
     this.state.history.insert(crdtIndex[0].index, crdtIndex[1].index, char, attributes, source);
   }
 
-  multiInsert(chars: String, startIndex: number, attributes: object, source: string) {
+  private multiInsert(chars: String, startIndex: number, attributes: object, source: string) {
     let index = startIndex;
     for (let i in chars) {
       let char = chars[i];
@@ -99,7 +127,7 @@ class Document extends React.Component<IProps, IState> {
     }
   }
 
-  singleDelete(index: number, source: string) {
+  private singleDelete(index: number, source: string) {
     try {
       let chars = this.state.history.getRelativeIndex(index);
       //console.log(index, crdtIndex);
@@ -109,7 +137,7 @@ class Document extends React.Component<IProps, IState> {
     }
   }
 
-  multiDelete(startIndex: number, length: number, source: string) {
+  private multiDelete(startIndex: number, length: number, source: string) {
     let index = startIndex;
     //console.log(length)
     for (let i = 0; i < length; i++) {
@@ -119,7 +147,7 @@ class Document extends React.Component<IProps, IState> {
     }
   }
 
-  singleRetain(index: number, attribute: object, source: string) {
+  private singleRetain(index: number, attribute: object, source: string) {
     try {
       console.log("single retain", index, attribute);
       let chars = this.state.history.getRelativeIndex(index);
@@ -130,7 +158,7 @@ class Document extends React.Component<IProps, IState> {
     }
   }
 
-  multiRetain(index: number, length: number, attribute: object, source: string) {
+  private multiRetain(index: number, length: number, attribute: object, source: string) {
     console.log("multi retain", index, attribute);
     for (let i = 0; i < length; i++) {
       //console.log(i, index)
@@ -139,7 +167,7 @@ class Document extends React.Component<IProps, IState> {
     }
   }
 
-  inspectDelta(ops: any, index: number, source: string) {
+  private inspectDelta(ops: any, index: number, source: string) {
     if (ops["insert"] != null) {
       let chars = ops["insert"];
       let attributes = ops["attributes"];
@@ -188,17 +216,6 @@ class Document extends React.Component<IProps, IState> {
   
   private onBlur(previousRange: Range, source: string, editor: any) {
     console.log("onBlur: ", previousRange)
-  }
-
-  private testCursor() {
-    if (this.reactQuillRef.current) {
-      const cursorOne = this.reactQuillRef.current.getEditor().getModule('cursors');
-      console.log(cursorOne);
-      
-      cursorOne.createCursor(1, 'Test', 'blue');
-      cursorOne.moveCursor(1, { index: 1, length: 3 })
-      
-    }
   }
 
   public render() {
