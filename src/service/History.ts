@@ -4,24 +4,35 @@ import { Sequence } from '../../src/crdt/Sequence';
 import { Char } from '../../src/crdt/Char';
 import { Cursor } from './Cursor';
 
+const CURSOR = 'cursor';
+const INSERT = 'insert';
+const DELETE = 'delete';
+const RETAIN = 'retain';
+
 export class History {
     sequence: Sequence;
     versionVector: Array<UserVersion>;
     cursors: Array<Cursor>;
+    localCursor: Cursor;
     currentUserID: number;
     socket: Socket;
     remoteInsert: (index: number, char: Char) => void;
     remoteDelete: (index: number) => void;
     remoteRetain: (index: number, char: Char) => void;
+    updateRemoteCursors: (cursor: Cursor) => void;
     constructor(currentUserID: string, remoteInsert: (index: number, char: Char) => void, 
-        remoteDelete: (index: number) => void, remoteRetain: (index: number, char: Char) => void) {
+        remoteDelete: (index: number) => void, remoteRetain: (index: number, char: Char) => void,
+        updateRemoteCursors: (cursor: Cursor) => void) {
 
         this.socket = new Socket(this.remoteChange.bind(this), this.updateConnectionState.bind(this))
         this.sequence = new Sequence();
+        this.localCursor = new Cursor(currentUserID, 1, 0);
+        this.cursors = [];
         this.versionVector = [];
         this.remoteInsert = remoteInsert;
         this.remoteDelete = remoteDelete;
         this.remoteRetain = remoteRetain;
+        this.updateRemoteCursors = updateRemoteCursors;
     }
 
     updateConnectionState() {
@@ -29,27 +40,23 @@ export class History {
     }
 
     insert(indexStart: number, indexEnd: number, char: string, attributes: object, source: string) {
-        //console.log("insert: ", char, ", at: ", indexStart, ", source: ", source);
         if (source !== 'silent') {
             let charObj: Char = this.sequence.insert(indexStart, indexEnd, char, attributes);
-            //console.log('insert');
-            this.socket.send(JSON.stringify({type: 'insert', data: charObj}));
+            this.socket.send(JSON.stringify({type: INSERT, data: charObj}));
         }
     }
 
     delete(char: Char, source: string) {
         if (source !== 'silent') {
             this.sequence.delete(char.id);
-            //console.log('delete sent now!');
-            this.socket.send(JSON.stringify({type: 'delete', data: char}));
+            this.socket.send(JSON.stringify({type: DELETE, data: char}));
         }
     }
 
     retain(char: Char, attributes: object, source: string) {
         if (source !== 'silent') {
             char.update(attributes);
-            this.socket.send(JSON.stringify({type: 'retain', data: char}));
-            console.log("sent remote retain");
+            this.socket.send(JSON.stringify({type: RETAIN, data: char}));
         }
     }
 
@@ -57,11 +64,20 @@ export class History {
         return this.sequence.getRelativeIndex(index);
     }
 
-    updateCursor(userID: string, startChar: Char, endChar: Char) {
-        const relStartIndex = this.sequence.getCharRelativeIndex(startChar);
-        const relEndIndex = this.sequence.getCharRelativeIndex(endChar);
-        const len = relEndIndex - relStartIndex;
-        console.log(len);
+    updateRemoteCursor(remoteCursor: Cursor) {
+        let cursor = this.cursors.find(c => c.userID === remoteCursor.userID);
+        if (cursor) {
+            cursor.updateRange(remoteCursor.index, remoteCursor.length);
+        } else {
+            cursor = new Cursor(remoteCursor.userID, remoteCursor.index, remoteCursor.length);
+            this.cursors.push(cursor);
+        }
+        this.updateRemoteCursors(cursor);
+    }
+
+    updateCursor(index: number, length: number) {
+        this.localCursor.updateRange(index, length);
+        this.socket.send(JSON.stringify({type: CURSOR, data: this.localCursor}))
     }
 
     getCursors() : Array<Cursor> {
@@ -71,40 +87,31 @@ export class History {
     remoteChange(jsonMessage: any) {
         //TODO: Validate data in jsonMessage
         let change = JSON.parse(jsonMessage);
-        if (change.type === 'insert') {
+        if (change.type === INSERT) {
             let char : Char = change.data;
             this.sequence.remoteInsert(char);
             let index = this.sequence.getCharRelativeIndex(char);
-            console.log("remote ins", 'index: ',index, ', char: ', char);
             this.remoteInsert(index, char);
-        } else if (change.type === 'delete') {
+        } else if (change.type === DELETE) {
             let char : Char = change.data;
             let id : string = char.id;
-            //console.log('delete', id);
             this.sequence.delete(id);
             try {
                 let index = this.sequence.getCharRelativeIndex(char);
-                console.log("remote del", 'index: ',index, ', char: ', char);
                 this.remoteDelete(index);
             } catch (e) {
-                console.log(e);
             }
-        } else if (change.type === 'retain') {
+        } else if (change.type === RETAIN) {
             let char : Char = change.data;
-            console.log("recieved remote retain");
             this.sequence.remoteRetain(char);
             try {
                 let index = this.sequence.getCharRelativeIndex(char);
-                console.log("remote retain", 'index: ',index, ', char: ', char);
                 this.remoteRetain(index, char);
             } catch (e) {
-                console.log(e);
             }
-        } else if (change.type === 'cursor') {
-            let userID = change.userID;
-            let startChar = change.startChar;
-            let endChar = change.endChar;
-            this.updateCursor(userID, startChar, endChar);
+        } else if (change.type === CURSOR) {
+            let remoteCursor : Cursor = change.data;
+            this.updateRemoteCursor(remoteCursor);
         }
     }
 }

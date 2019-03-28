@@ -35,7 +35,7 @@ class Document extends React.Component<IProps, IState> {
     this.state = {
       doc: "",
       history: new History(uuidv1(), this.remoteInsert.bind(this), this.remoteDelete.bind(this),
-        this.remoteRetain.bind(this)),
+        this.remoteRetain.bind(this), this.updateRemoteCursors.bind(this)),
       text: "",
     }
     
@@ -64,14 +64,12 @@ class Document extends React.Component<IProps, IState> {
 
   public remoteDelete(index: number) {
     if (this.reactQuillRef.current) {
-      //console.log("remote delete: ", index);
       this.reactQuillRef.current.getEditor().deleteText(index, 1, "silent");
     }
   }
 
   public remoteRetain(index: number, char: Char) {
     if (this.reactQuillRef.current) {
-      console.log('remote retain', char);
       this.reactQuillRef.current.getEditor().formatText(index,1,
         {
           'italic': char.italic,
@@ -81,33 +79,6 @@ class Document extends React.Component<IProps, IState> {
         }, 'silent'
       );
     } 
-  }
-
-  public updateRemoteCursors() {
-    if (this.reactQuillRef.current) {
-      const quillCursors = this.reactQuillRef.current.getEditor().getModule('cursors');
-      const cursors : Array<Cursor> = this.state.history.getCursors();
-      for (let i in cursors) {
-        const cursor : Cursor = cursors[i];
-        const qC = quillCursors.cursors.find((c: { id: string; }) => c.id === cursor.userID);
-        if (qC) {
-          quillCursors.moveCursor(qC.id, {index: cursor.start, length: cursor.length})
-        } else {
-          quillCursors.createCursor(cursor.userID, 'Bob', cursor.color);
-        }
-      }
-    }
-  }
-
-  private testCursor() {
-    if (this.reactQuillRef.current) {
-      const cursorOne = this.reactQuillRef.current.getEditor().getModule('cursors');
-      console.log(cursorOne);
-      
-      cursorOne.createCursor(1, 'Test', 'blue');
-      cursorOne.moveCursor(1, { index: 1, length: 3 })
-      
-    }
   }
 
   private insert(chars: String, startIndex: number, attributes: object, source: string) {
@@ -133,13 +104,9 @@ class Document extends React.Component<IProps, IState> {
   }
 
   private retain(index: number, length: number, attribute: object, source: string) {
-    console.log("multi retain", index, attribute);
     for (let i = 0; i < length; i++) {
-      //console.log(i, index)
       try {
-        console.log("single retain", index, attribute);
         let chars = this.state.history.getRelativeIndex(index);
-        console.log(index, chars[1]);
         this.state.history.retain(chars[1], attribute, source);
       } catch {
         alert("failed to find relative index");
@@ -164,7 +131,6 @@ class Document extends React.Component<IProps, IState> {
   }
 
   private handleChange(value: any, delta: any, source: any) {
-    //console.log('!== api')
     let index = delta.ops[0]["retain"] || 0;
     if (delta.ops.length > 1) {
       this.inspectDelta(delta.ops[1], index, source);
@@ -174,16 +140,43 @@ class Document extends React.Component<IProps, IState> {
     this.setState({ text: value }) 
   }
 
+  public updateRemoteCursors(cursor: Cursor) {
+    if (this.reactQuillRef.current) {
+      const quillCursors = this.reactQuillRef.current.getEditor().getModule('cursors');
+      const qC = quillCursors.cursors().find((c: { id: string; }) => c.id === cursor.userID);
+      if (qC) {
+        quillCursors.moveCursor(qC.id, {index: cursor.index, length: cursor.length})
+      } else {
+        quillCursors.createCursor(cursor.userID, 'Bob', 'blue');
+        quillCursors.moveCursor(cursor.userID, {index: cursor.index, length: cursor.length})
+      }
+    }
+  }
+
+  private testCursor() {
+    if (this.reactQuillRef.current) {
+      const cursorOne = this.reactQuillRef.current.getEditor().getModule('cursors');
+      console.log(cursorOne);
+      
+      cursorOne.createCursor(1, 'Test', 'blue');
+      cursorOne.moveCursor(1, { index: 1, length: 3 })
+      
+    }
+  }
+
   private handleChangeSelection(range: any, source: string, editor: any) {
-    console.log("onChangeSelection", range, source, editor);
+    console.log('changeSelection ', source);
+    if (range && range.index !== null) {
+      this.state.history.updateCursor(range.index, range.length);
+    }
   }
 
   private onFocus(range: Range, source: string, editor: any) {
-    console.log("onFocus: ", range)
+    //console.log("onFocus: ", range)
   }
   
   private onBlur(previousRange: Range, source: string, editor: any) {
-    console.log("onBlur: ", previousRange)
+    //console.log("onBlur: ", previousRange)
   }
 
   public render() {

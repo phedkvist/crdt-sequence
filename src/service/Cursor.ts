@@ -1,17 +1,17 @@
-
 export class Cursor {
-	constructor(userID: string) {
+	constructor(userID: string, index: number, length: number) {
 		this.userID = userID;
-    this.start;
-    this.length;
+    this.index = 1;
+    this.length = 0;
     this.color;
 	}
 	userID: string;
-  start: number;
+  index: number;
   length: number;
   color: string;
   
-  updateRange(start: number, length: number) {
-
+  updateRange(index: number, length: number) {
+    this.index = index;
+    this.length = length;
   }
 }

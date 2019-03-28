@@ -27,7 +27,7 @@ export class Sequence {
     }
 
     remoteInsert(char: Char) {
-        //console.log("Remote insert:", char);
+        console.log("Remote insert:", char);
         const charCopy = new Char(char.index, char.char, char.siteID, {bold: char.bold, italic: char.italic, underline: char.underline}, char.id);
         this.chars.push(charCopy);
         this.chars.sort(function(a,b) {
@@ -112,7 +112,6 @@ export class Sequence {
             }
             i++;
         }
-        console.log(c, i, aliveIndex);
         if (charFound)
             return aliveIndex-1;
         else
