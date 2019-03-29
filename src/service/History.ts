@@ -41,6 +41,7 @@ export class History {
 
     insert(indexStart: number, indexEnd: number, char: string, attributes: object, source: string) {
         if (source !== 'silent') {
+            console.log('history insert: ', indexStart, indexEnd, char);
             let charObj: Char = this.sequence.insert(indexStart, indexEnd, char, attributes);
             this.socket.send(JSON.stringify({type: INSERT, data: charObj}));
         }

@@ -82,6 +82,7 @@ class Document extends React.Component<IProps, IState> {
   }
 
   private insert(chars: String, startIndex: number, attributes: object, source: string) {
+    console.log('insert: ', startIndex, ' ', chars)
     let index = startIndex;
     for (let i in chars) {
       let char = chars[i];
@@ -92,6 +93,7 @@ class Document extends React.Component<IProps, IState> {
   }
 
   private delete(startIndex: number, length: number, source: string) {
+    console.log('delete: ', startIndex)
     let index = startIndex;
     for (let i = 0; i < length; i++) {
       try {
@@ -156,7 +158,7 @@ class Document extends React.Component<IProps, IState> {
   private testCursor() {
     if (this.reactQuillRef.current) {
       const cursorOne = this.reactQuillRef.current.getEditor().getModule('cursors');
-      console.log(cursorOne);
+      //console.log(cursorOne);
       
       cursorOne.createCursor(1, 'Test', 'blue');
       cursorOne.moveCursor(1, { index: 1, length: 3 })
@@ -165,7 +167,7 @@ class Document extends React.Component<IProps, IState> {
   }
 
   private handleChangeSelection(range: any, source: string, editor: any) {
-    console.log('changeSelection ', source);
+    //console.log('changeSelection ', source);
     if (range && range.index !== null) {
       this.state.history.updateCursor(range.index, range.length);
     }

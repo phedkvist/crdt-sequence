@@ -9,14 +9,20 @@ export class Sequence {
     constructor() {
         this.chars = [];
         this.siteID = uuidv1();;
-        this.count = 0;
+        this.count = 100;
         this.insert(0, 0, "bof", {});
         this.insert(10000, 10000, "eof", {});
     }
 
     insert(indexStart: number, indexEnd: number, char: string, attributes: object, id?: string) : Char {
+        //TODO: Must find better way here
         let diff = (indexEnd - indexStart);
-        let index = Math.round(indexStart + diff/1000);
+        let index;
+        if (diff <= 1) {
+            index = indexStart + diff/10;
+        } else {
+            index = indexStart + diff/5;
+        }
         let charObj = (id !== undefined) ? new Char(index, char, this.siteID, attributes, id) : new Char(index, char, this.siteID, attributes);
 
         this.chars.splice(index, 0, charObj);
@@ -27,7 +33,6 @@ export class Sequence {
     }
 
     remoteInsert(char: Char) {
-        console.log("Remote insert:", char);
         const charCopy = new Char(char.index, char.char, char.siteID, {bold: char.bold, italic: char.italic, underline: char.underline}, char.id);
         this.chars.push(charCopy);
         this.chars.sort(function(a,b) {
@@ -121,7 +126,7 @@ export class Sequence {
     getSequence(): string {
         let seq = "";
         for (let char of this.chars) {
-            if (!char.tombstone)
+            if (!char.tombstone && char.char !== "bof" && char.char !== "eof")
                 seq += (char.char)
         }
         return seq;
