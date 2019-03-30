@@ -15,7 +15,7 @@ export class Socket {
     }
 
     connect() {
-        this.ws = new WebSocket('ws://localhost:8999');
+        this.ws = new WebSocket('ws://boiling-castle-92688.herokuapp.com');
 		this.ws.addEventListener('message', this.onMessage, false);
 		this.ws.addEventListener('close', this.onClose, false);
 		this.ws.addEventListener('open', this.onOpen, false);
@@ -44,5 +44,6 @@ export class Socket {
 	onOpen(e: any) {
 		this.connected = true;
 		this.updateConnectionState();
+		console.log('connected');
 	}
 }
