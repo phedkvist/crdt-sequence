@@ -14,15 +14,26 @@ export class Sequence {
         this.insert(10000, 10000, "eof", {});
     }
 
-    insert(indexStart: number, indexEnd: number, char: string, attributes: object, id?: string) : Char {
-        //TODO: Must find better way here
+    generateIndex(indexStart: number, indexEnd: number) : number {
         let diff = (indexEnd - indexStart);
         let index;
-        if (diff <= 1) {
-            index = indexStart + diff/10;
+        if (diff <= 10) {
+            index = indexStart + diff/100;
+        } else if (diff <= 1000) {
+            index = Math.round(indexStart + diff/10);
+        } else if (diff <= 5000) {
+            index = Math.round(indexStart + diff/100);
         } else {
-            index = indexStart + diff/5;
+            index = Math.round(indexStart + diff/1000);
         }
+        return index;
+    }
+
+    insert(indexStart: number, indexEnd: number, char: string, attributes: object, id?: string) : Char {
+        //TODO: Must find better way here
+        
+        let index = this.generateIndex(indexStart, indexEnd);
+        //let index = this.randomIntFromInterval(indexStart, indexEnd);
         let charObj = (id !== undefined) ? new Char(index, char, this.siteID, attributes, id) : new Char(index, char, this.siteID, attributes);
 
         this.chars.splice(index, 0, charObj);

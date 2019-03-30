@@ -60,7 +60,7 @@ describe('Sequence', () => {
     insert:  0   
     insert:  0   x
   */
-  test.only('remote inserts / deletes at the beginning', () => {
+  test('remote inserts / deletes at the beginning', () => {
     let secondSequence = new Sequence();
     let aChar = sequence.insert(bof.index, eof.index,'a');
     secondSequence.remoteInsert(aChar);
@@ -69,5 +69,10 @@ describe('Sequence', () => {
     sequence.delete(aChar.id);
     secondSequence.delete(aChar.id);
     expect(sequence.getSequence()).toEqual(secondSequence.getSequence());
-  }) 
+  })
+  
+  test.only('can generate index between integer 1 and 2', () => {
+    let index = sequence.generateIndex(1,2);
+    expect()
+  })
 });
