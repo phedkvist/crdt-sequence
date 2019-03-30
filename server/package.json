@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node dist/server/main.js"
   },
   "author": "",
   "license": "ISC",
@@ -16,5 +17,8 @@
     "@types/express": "^4.16.1",
     "@types/ws": "^6.0.1",
     "typescript": "^3.3.3333"
+  },
+  "engines": {
+    "node": "10.15.2"
   }
 }
