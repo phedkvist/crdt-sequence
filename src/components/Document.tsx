@@ -149,7 +149,7 @@ class Document extends React.Component<IProps, IState> {
       if (qC) {
         quillCursors.moveCursor(qC.id, {index: cursor.index, length: cursor.length})
       } else {
-        quillCursors.createCursor(cursor.userID, 'Bob', 'blue');
+        quillCursors.createCursor(cursor.userID, 'Bob', cursor.color);
         quillCursors.moveCursor(cursor.userID, {index: cursor.index, length: cursor.length})
       }
     }

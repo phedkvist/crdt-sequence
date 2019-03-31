@@ -8,6 +8,7 @@ const CURSOR = 'cursor';
 const INSERT = 'insert';
 const DELETE = 'delete';
 const RETAIN = 'retain';
+const SILENT = 'silent';
 
 export class History {
     sequence: Sequence;
@@ -26,8 +27,8 @@ export class History {
 
         this.socket = new Socket(this.remoteChange.bind(this), this.updateConnectionState.bind(this))
         this.sequence = new Sequence();
-        this.localCursor = new Cursor(currentUserID, 1, 0);
         this.cursors = [];
+        this.localCursor = new Cursor(currentUserID, 1, 0, this.cursors.length);
         this.versionVector = [];
         this.remoteInsert = remoteInsert;
         this.remoteDelete = remoteDelete;
@@ -40,7 +41,7 @@ export class History {
     }
 
     insert(indexStart: number, indexEnd: number, char: string, attributes: object, source: string) {
-        if (source !== 'silent') {
+        if (source !== SILENT) {
             console.log('history insert: ', indexStart, indexEnd, char);
             let charObj: Char = this.sequence.insert(indexStart, indexEnd, char, attributes);
             this.socket.send(JSON.stringify({type: INSERT, data: charObj}));
@@ -48,14 +49,14 @@ export class History {
     }
 
     delete(char: Char, source: string) {
-        if (source !== 'silent') {
+        if (source !== SILENT) {
             this.sequence.delete(char.id);
             this.socket.send(JSON.stringify({type: DELETE, data: char}));
         }
     }
 
     retain(char: Char, attributes: object, source: string) {
-        if (source !== 'silent') {
+        if (source !== SILENT) {
             char.update(attributes);
             this.socket.send(JSON.stringify({type: RETAIN, data: char}));
         }
@@ -70,7 +71,8 @@ export class History {
         if (cursor) {
             cursor.updateRange(remoteCursor.index, remoteCursor.length);
         } else {
-            cursor = new Cursor(remoteCursor.userID, remoteCursor.index, remoteCursor.length);
+            cursor = new Cursor(remoteCursor.userID, remoteCursor.index,
+                remoteCursor.length, this.cursors.length);
             this.cursors.push(cursor);
         }
         this.updateRemoteCursors(cursor);
