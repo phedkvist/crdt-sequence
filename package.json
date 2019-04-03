@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@types/mocha": "^5.2.6",
     "express": "^4.16.4",
     "express-favicon": "^2.0.1",
     "path": "^0.12.7",
