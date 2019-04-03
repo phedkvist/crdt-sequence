@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@types/mocha": "^5.2.6",
     "express": "^4.16.4",
     "express-favicon": "^2.0.1",
     "path": "^0.12.7",
@@ -15,8 +16,7 @@
     "ws": "^6.2.0"
   },
   "scripts": {
-    "start": "yarn build && node server.js",
-    "start:dev": "react-scripts start",
+    "start": "react-scripts start",
     "build": "react-scripts-ts build",
     "test": "react-scripts-ts test --env=jsdom --watchAll",
     "eject": "react-scripts-ts eject"
