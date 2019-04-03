@@ -15,7 +15,7 @@ export default class Socket {
     }
 
     connect() {
-        this.ws = new WebSocket('ws://boiling-castle-92688.herokuapp.com');
+        this.ws = new WebSocket('wss://boiling-castle-92688.herokuapp.com');
 		this.ws.addEventListener('message', this.onMessage, false);
 		this.ws.addEventListener('close', this.onClose, false);
 		this.ws.addEventListener('open', this.onOpen, false);
