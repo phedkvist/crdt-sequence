@@ -1,4 +1,4 @@
-export class Socket {
+export default class Socket {
     ws: WebSocket;
     connected: boolean;
     remoteChange: (json: string) => void;

@@ -4,16 +4,19 @@ import * as React from 'react';
 // @ts-ignore
 import ReactQuill, { Quill, Range } from 'react-quill'; 
 import 'react-quill/dist/quill.snow.css';
-import { Char } from '../crdt/Char';
-import { History } from '../service/History';
+import Char from '../crdt/Char';
+import History from '../service/History';
 import './Document.css';
-import { Cursor } from 'src/service/Cursor';
+import Cursor from 'src/service/Cursor';
+import ActiveUsers from './ActiveUsers';
+
 // tslint:disable-next-line: no-var-requires
 const uuidv1 = require('uuid/v1');
 
 Quill.register('modules/cursors', QuillCursors)
 const modules = {
   cursors: true,
+  toolbar: ['bold', 'italic', 'underline'],
 };
 
 // tslint:disable-next-line: no-empty-interface
@@ -149,7 +152,7 @@ class Document extends React.Component<IProps, IState> {
       if (qC) {
         quillCursors.moveCursor(qC.id, {index: cursor.index, length: cursor.length})
       } else {
-        quillCursors.createCursor(cursor.userID, 'Bob', cursor.color);
+        quillCursors.createCursor(cursor.userID, cursor.name, cursor.color);
         quillCursors.moveCursor(cursor.userID, {index: cursor.index, length: cursor.length})
       }
     }
@@ -203,6 +206,7 @@ class Document extends React.Component<IProps, IState> {
     return (
       <div className="editor">
         <h3>CRDT Sequence</h3>
+        <ActiveUsers users={this.state.history.cursors} />
         <ReactQuill value={this.state.text} theme={"snow"} ref={this.reactQuillRef} 
                   onChange={this.handleChange} onFocus={this.onFocus} onBlur={this.onBlur}
                   onChangeSelection={this.handleChangeSelection} modules={modules}/>

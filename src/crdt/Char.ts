@@ -1,6 +1,6 @@
 const uuidv1 = require('uuid/v1');
 
-export class Char {
+export default class Char {
     index: number;
     char: string;
     tombstone: boolean;

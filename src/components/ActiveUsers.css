@@ -1,0 +1,29 @@
+.circle {
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  margin: 4px;
+  display: inline-block;
+  font-size:14px;
+}
+
+.red {
+  border: 1px solid #ccc;
+  color: red;
+}
+
+.orange {
+  border: 1px solid #ccc;
+  color: orange;
+}
+
+.green {
+  border: 1px solid #ccc;
+  color: green;
+}
+
+.blue {
+  border: 1px solid #ccc;
+  color: blue;
+}

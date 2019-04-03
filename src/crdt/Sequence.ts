@@ -1,7 +1,7 @@
-import {Char} from './Char';
+import Char from './Char';
 const uuidv1 = require('uuid/v1');
 
-export class Sequence {
+export default class Sequence {
     chars: Array<Char>;
     siteID: number;
     count: number;

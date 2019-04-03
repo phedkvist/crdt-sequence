@@ -1,8 +1,8 @@
-import { UserVersion } from './UserVersion';
-import { Socket } from './Socket';
-import { Sequence } from '../../src/crdt/Sequence';
-import { Char } from '../../src/crdt/Char';
-import { Cursor } from './Cursor';
+import UserVersion from './UserVersion';
+import Socket from './Socket';
+import Sequence from '../../src/crdt/Sequence';
+import Char from '../../src/crdt/Char';
+import Cursor from './Cursor';
 
 const CURSOR = 'cursor';
 const INSERT = 'insert';
@@ -10,7 +10,7 @@ const DELETE = 'delete';
 const RETAIN = 'retain';
 const SILENT = 'silent';
 
-export class History {
+export default class History {
     sequence: Sequence;
     versionVector: Array<UserVersion>;
     cursors: Array<Cursor>;
