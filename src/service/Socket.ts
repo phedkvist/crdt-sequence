@@ -15,7 +15,11 @@ export default class Socket {
     }
 
     connect() {
-        this.ws = new WebSocket('wss://boiling-castle-92688.herokuapp.com');
+		if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+			this.ws = new WebSocket('ws://localhost:5000');
+		} else {
+			this.ws = new WebSocket('wss://boiling-castle-92688.herokuapp.com');
+		}
 		this.ws.addEventListener('message', this.onMessage, false);
 		this.ws.addEventListener('close', this.onClose, false);
 		this.ws.addEventListener('open', this.onOpen, false);
@@ -45,5 +49,6 @@ export default class Socket {
 		this.connected = true;
 		this.updateConnectionState();
 		console.log('connected');
+		this.send(JSON.stringify({type: 'request_init_load'}));
 	}
 }

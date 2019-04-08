@@ -27,6 +27,7 @@ interface IState {
   text: string,
   doc: any,
   history: History,
+  selectedRange: [],
 }
 
 class Document extends React.Component<IProps, IState> {
@@ -40,12 +41,14 @@ class Document extends React.Component<IProps, IState> {
       history: new History(uuidv1(), this.remoteInsert.bind(this), this.remoteDelete.bind(this),
         this.remoteRetain.bind(this), this.updateRemoteCursors.bind(this)),
       text: "",
+      selectedRange: [],
     }
     
     this.handleChange = this.handleChange.bind(this);
     this.handleChangeSelection = this.handleChangeSelection.bind(this);
     this.onFocus = this.onFocus.bind(this);
     this.onBlur = this.onBlur.bind(this);
+
   }
 
   componentDidMount() {
@@ -122,6 +125,7 @@ class Document extends React.Component<IProps, IState> {
 
   private inspectDelta(ops: any, index: number, source: string) {
     if (ops["insert"] != null) {
+      console.log('INSERT', ' RANGE: ', this.state.selectedRange);
       let chars = ops["insert"];
       let attributes = ops["attributes"];
       this.insert(chars, index, attributes, source);
@@ -162,10 +166,8 @@ class Document extends React.Component<IProps, IState> {
     if (this.reactQuillRef.current) {
       const cursorOne = this.reactQuillRef.current.getEditor().getModule('cursors');
       //console.log(cursorOne);
-      
       cursorOne.createCursor(1, 'Test', 'blue');
       cursorOne.moveCursor(1, { index: 1, length: 3 })
-      
     }
   }
 
@@ -173,7 +175,11 @@ class Document extends React.Component<IProps, IState> {
     //console.log('changeSelection ', source);
     if (range && range.index !== null) {
       this.state.history.updateCursor(range.index, range.length);
+      this.setState({selectedRange: range});
+    } else {
+      this.setState({selectedRange: []});
     }
+    console.log(this.state.selectedRange);
   }
 
   private onFocus(range: Range, source: string, editor: any) {
