@@ -135,8 +135,10 @@ export default class History {
             let remoteCursor : Cursor = change.data;
             this.updateRemoteCursor(remoteCursor);
         } else if (change.type === INIT_LOAD) {
+            console.log('should recieve init_load :');
             for (let i = 0; i < change.data.length; i++) {
                 let prevChange = JSON.parse(change.data[i]);
+                console.log(prevChange);
                 this.handleRemoteChange(prevChange);
             }
         }
