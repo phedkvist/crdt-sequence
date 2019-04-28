@@ -88,7 +88,7 @@ class Document extends React.Component<IProps, IState> {
   }
 
   private insert(chars: String, startIndex: number, attributes: object, source: string) {
-    console.log('insert: ', startIndex, ' ', chars)
+    //console.log('insert: ', startIndex, ' ', chars)
     let index = startIndex;
     for (let i in chars) {
       let char = chars[i];
@@ -99,7 +99,7 @@ class Document extends React.Component<IProps, IState> {
   }
 
   private delete(startIndex: number, length: number, source: string) {
-    console.log('delete: ', startIndex, length)
+    //console.log('delete: ', startIndex, length)
     let index = startIndex;
     for (let i = 0; i < length; i++) {
       try {
@@ -125,7 +125,7 @@ class Document extends React.Component<IProps, IState> {
 
   private inspectDelta(ops: any, index: number, source: string) {
     if (ops["insert"] != null) {
-      console.log('INSERT', ' RANGE: ', this.state.selectedRange);
+      //console.log('INSERT', ' RANGE: ', this.state.selectedRange);
       let chars = ops["insert"];
       let attributes = ops["attributes"];
       this.insert(chars, index, attributes, source);
@@ -141,7 +141,7 @@ class Document extends React.Component<IProps, IState> {
 
   //TODO: Write a better implementation that follows the Quill Delta way
   private handleChange(value: any, delta: any, source: any) {
-    console.log('handleChange: ', value, delta, source);
+    //console.log('handleChange: ', value, delta, source);
     let index = delta.ops[0]["retain"] || 0;
     if (delta.ops.length === 4) {
       const deleteOps_1 = delta.ops[1];
@@ -194,7 +194,7 @@ class Document extends React.Component<IProps, IState> {
     } else {
       this.setState({selectedRange: []});
     }
-    console.log(this.state.selectedRange);
+    //console.log(this.state.selectedRange);
   }
 
   private onFocus(range: Range, source: string, editor: any) {

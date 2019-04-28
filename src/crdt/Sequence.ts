@@ -7,11 +7,9 @@ export default class Sequence {
     count: number;
 
     constructor() {
-        this.chars = [];
-        this.siteID = uuidv1();;
+        this.chars = [new Char(0, "bof", this.siteID, {}), new Char(10000, "eof", this.siteID, {})];
+        this.siteID = uuidv1();
         this.count = 100;
-        this.insert(0, 0, "bof", {});
-        this.insert(10000, 10000, "eof", {});
     }
 
     generateIndex(indexStart: number, indexEnd: number) : number {
@@ -29,32 +27,41 @@ export default class Sequence {
         return index;
     }
 
-    /* TODO:
-    function compareIdentifier(i1: Identifier, i2: Identifier) {
-        if (i1.digit < i2.digit) {
+    compareIdentifier(c1: Char, c2: Char) {
+        if (c1.index < c2.index) {
             return -1;
-        } else if (i1.digit > i2.digit) {
+        } else if (c1.index > c2.index) {
             return 1;
         } else {
-            if (i1.site < i2.site) {
+            if (c1.siteID < c2.siteID) {
                 return -1;
-            } else if (i1.site > i2.site) {
+            } else if (c1.siteID > c2.siteID) {
                 return 1;
             } else {
                 return 0;
             }
         }
     }
-    */
-
 
     insert(indexStart: number, indexEnd: number, char: string, attributes: object, id?: string) : Char {
         //TODO: Must find better way here
         
         let index = this.generateIndex(indexStart, indexEnd);
+        console.log('Insert index:', index);
         //let index = this.randomIntFromInterval(indexStart, indexEnd);
         let charObj = (id !== undefined) ? new Char(index, char, this.siteID, attributes, id) : new Char(index, char, this.siteID, attributes);
-
+        /*
+        for (let i = 0; i < this.chars.length; i++) {
+            let c = this.chars[i];
+            const compareIdentifier = this.compareIdentifier(charObj, c);
+            console.log('comparing: ', charObj, c, ' outcome: ', compareIdentifier);
+            if (compareIdentifier === -1 || compareIdentifier === 0) {
+                console.log('inserting ', char,  'at: ', i);
+                this.chars.splice(i, 0, charObj);
+                break;
+            }
+        }
+        */
         this.chars.splice(index, 0, charObj);
         this.chars.sort(function(a,b) {
             return a.index - b.index;
