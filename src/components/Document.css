@@ -1,5 +1,6 @@
 .editor {
     max-width: 800px;
+    margin: 0 auto;
 }
 
 .ql-container {
@@ -29,4 +30,10 @@
 
 .sequenceTable tr {
     border: 1px solid #add8e6;
+}
+
+.activeUsers {
+    display:flex;
+    flex-direction: row-reverse;
+    justify-content: flex-start;
 }

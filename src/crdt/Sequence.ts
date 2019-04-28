@@ -29,6 +29,25 @@ export default class Sequence {
         return index;
     }
 
+    /* TODO:
+    function compareIdentifier(i1: Identifier, i2: Identifier) {
+        if (i1.digit < i2.digit) {
+            return -1;
+        } else if (i1.digit > i2.digit) {
+            return 1;
+        } else {
+            if (i1.site < i2.site) {
+                return -1;
+            } else if (i1.site > i2.site) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+    }
+    */
+
+
     insert(indexStart: number, indexEnd: number, char: string, attributes: object, id?: string) : Char {
         //TODO: Must find better way here
         

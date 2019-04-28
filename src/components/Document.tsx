@@ -99,7 +99,7 @@ class Document extends React.Component<IProps, IState> {
   }
 
   private delete(startIndex: number, length: number, source: string) {
-    console.log('delete: ', startIndex)
+    console.log('delete: ', startIndex, length)
     let index = startIndex;
     for (let i = 0; i < length; i++) {
       try {
@@ -139,9 +139,24 @@ class Document extends React.Component<IProps, IState> {
     }
   }
 
+  //TODO: Write a better implementation that follows the Quill Delta way
   private handleChange(value: any, delta: any, source: any) {
+    console.log('handleChange: ', value, delta, source);
     let index = delta.ops[0]["retain"] || 0;
-    if (delta.ops.length > 1) {
+    if (delta.ops.length === 4) {
+      const deleteOps_1 = delta.ops[1];
+      this.inspectDelta(deleteOps_1, index, source);
+      index += delta.ops[2]["retain"];
+      const deleteOps_2 = delta.ops[3];
+      this.inspectDelta(deleteOps_2, index, source);
+    }
+    else if (delta.ops.length === 3) {
+      const deleteOps = delta.ops[2];
+      this.inspectDelta(deleteOps, index, source);
+      const insert = delta.ops[1];
+      this.inspectDelta(insert, index, source);
+    }
+    else if (delta.ops.length === 2) {
       this.inspectDelta(delta.ops[1], index, source);
     } else {
       this.inspectDelta(delta.ops[0], index, source);
@@ -212,7 +227,10 @@ class Document extends React.Component<IProps, IState> {
     return (
       <div className="editor">
         <h3>CRDT Sequence</h3>
-        <ActiveUsers users={this.state.history.cursors} />
+        <div className='activeUsers'>
+          <ActiveUsers users={[new Cursor(this.state.history.currentUserID, 1, 0, 0),
+                                new Cursor(this.state.history.currentUserID, 2, 0, 1)]} />
+        </div>
         <ReactQuill value={this.state.text} theme={"snow"} ref={this.reactQuillRef} 
                   onChange={this.handleChange} onFocus={this.onFocus} onBlur={this.onBlur}
                   onChangeSelection={this.handleChangeSelection} modules={modules}/>

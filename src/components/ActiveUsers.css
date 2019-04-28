@@ -1,29 +1,45 @@
 .circle {
   border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  line-height: 20px;
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
   margin: 4px;
+  font-size:16px;
+  position: relative;
   display: inline-block;
-  font-size:14px;
+  color: rgba(100, 100, 100, 1);
+}
+
+.circle .tooltip {
+  visibility: hidden;
+  width: 120px;
+  color: rgba(100, 100, 100, 1);
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+  font-size:16px;
+  /* Position the tooltip text - see examples below! */
+  position: absolute;
+  z-index: 1;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.circle:hover .tooltip {
+  visibility: visible;
 }
 
 .red {
-  border: 1px solid #ccc;
-  color: red;
+  background-color: red;
 }
 
 .orange {
-  border: 1px solid #ccc;
-  color: orange;
+  background-color: orange;
 }
 
 .green {
-  border: 1px solid #ccc;
-  color: green;
+  background-color: rgba(0, 255, 0, 0.7);
 }
 
 .blue {
-  border: 1px solid #ccc;
-  color: blue;
+  background-color: blue;
 }

@@ -45,17 +45,17 @@ export default class History {
         const localVersionVector = this.versionVector.find(e => e.userID === userID);
         if (localVersionVector) {
             localVersionVector.clock+=1;
-            console.log('local vector: ', localVersionVector);
+            //console.log('local vector: ', localVersionVector);
         } else {
             let newVector = new UserVersion(userID);
             this.versionVector.push(newVector);
-            console.log('new vector: ', newVector);
+            //console.log('new vector: ', newVector);
         }
     }
 
     insert(indexStart: number, indexEnd: number, char: string, attributes: object, source: string) {
         if (source !== SILENT) {
-            console.log('history insert: ', indexStart, indexEnd, char);
+            //console.log('history insert: ', indexStart, indexEnd, char);
             let charObj: Char = this.sequence.insert(indexStart, indexEnd, char, attributes);
             this.socket.send(JSON.stringify({type: INSERT, data: charObj, userID: this.currentUserID}));
             this.incrementVersionVector(this.currentUserID);
@@ -135,10 +135,10 @@ export default class History {
             let remoteCursor : Cursor = change.data;
             this.updateRemoteCursor(remoteCursor);
         } else if (change.type === INIT_LOAD) {
-            console.log('should recieve init_load :');
+            //console.log('should recieve init_load :');
             for (let i = 0; i < change.data.length; i++) {
                 let prevChange = JSON.parse(change.data[i]);
-                console.log(prevChange);
+                //console.log(prevChange);
                 this.handleRemoteChange(prevChange);
             }
         }
