@@ -104,16 +104,13 @@ export default class Sequence {
     }
 
     getRelativeIndex(index: number): Array<Char> {
-        //console.log("gri", index);
         let i = 0;
         let aliveIndex = 0;
         let itemsFound = false;
         let charStart; let charEnd; let char;
         while(!itemsFound && (i < this.chars.length)) {
             char = this.chars[i];
-            //console.log(char);
             if(!char.tombstone) {
-                //console.log(char, aliveIndex)
                 if(aliveIndex>index) {
                     charEnd = char;
                     itemsFound = true;
@@ -122,7 +119,6 @@ export default class Sequence {
                 }
                 aliveIndex++;
             }
-            //console.log(index, aliveIndex, charStart, charEnd);
             i++;
         }
         if(aliveIndex>=index) {

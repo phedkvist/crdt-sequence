@@ -177,15 +177,6 @@ class Document extends React.Component<IProps, IState> {
     }
   }
 
-  private testCursor() {
-    if (this.reactQuillRef.current) {
-      const cursorOne = this.reactQuillRef.current.getEditor().getModule('cursors');
-      //console.log(cursorOne);
-      cursorOne.createCursor(1, 'Test', 'blue');
-      cursorOne.moveCursor(1, { index: 1, length: 3 })
-    }
-  }
-
   private handleChangeSelection(range: any, source: string, editor: any) {
     //console.log('changeSelection ', source);
     if (range && range.index !== null) {
@@ -228,13 +219,11 @@ class Document extends React.Component<IProps, IState> {
       <div className="editor">
         <h3>CRDT Sequence</h3>
         <div className='activeUsers'>
-          <ActiveUsers users={[new Cursor(this.state.history.currentUserID, 1, 0, 0),
-                                new Cursor(this.state.history.currentUserID, 2, 0, 1)]} />
+          <ActiveUsers users={this.state.history.cursors} />
         </div>
         <ReactQuill value={this.state.text} theme={"snow"} ref={this.reactQuillRef} 
                   onChange={this.handleChange} onFocus={this.onFocus} onBlur={this.onBlur}
                   onChangeSelection={this.handleChangeSelection} modules={modules}/>
-        <button onClick={this.testCursor.bind(this)}>Cursor</button>
         <table className="sequenceTable">
           <thead>
             <tr>
