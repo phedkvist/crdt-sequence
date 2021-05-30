@@ -12,7 +12,7 @@
     "react-quill": "^1.3.3",
     "react-scripts-ts": "^4.0.8",
     "uuid": "^3.3.2",
-    "ws": "^6.2.0"
+    "ws": "^7.4.6"
   },
   "scripts": {
     "start": "react-scripts-ts start",
